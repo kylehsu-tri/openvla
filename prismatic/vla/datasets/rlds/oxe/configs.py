@@ -641,4 +641,15 @@ OXE_DATASET_CONFIGS = {
         "state_encoding": StateEncoding.POS_EULER,
         "action_encoding": ActionEncoding.EEF_POS,
     },
+    "droid_pick_up_can_target": {
+        "image_obs_keys":  {
+            "primary":   "combined_exterior_wrist_image_left",
+            "secondary": None,
+            "wrist":     None,
+        },
+        "depth_obs_keys":  {"primary": None, "secondary": None, "wrist": None},
+        "state_obs_keys":  ["proprio"],
+        "state_encoding":  StateEncoding.POS_EULER,
+        "action_encoding": ActionEncoding.EEF_POS,
+    },
 }

@@ -121,13 +121,13 @@ class RLDSDataset(IterableDataset):
         # If applicable, enable image augmentations
         if image_aug:
             rlds_config["frame_transform_kwargs"].update({"image_augment_kwargs" : dict(
-                random_resized_crop=dict(scale=[0.9, 0.9], ratio=[1.0, 1.0]),
+                # random_resized_crop=dict(scale=[0.9, 0.9], ratio=[1.0, 1.0]),
                 random_brightness=[0.2],
                 random_contrast=[0.8, 1.2],
                 random_saturation=[0.8, 1.2],
                 random_hue=[0.05],
                 augment_order=[
-                    "random_resized_crop",
+                    # "random_resized_crop",
                     "random_brightness",
                     "random_contrast",
                     "random_saturation",
