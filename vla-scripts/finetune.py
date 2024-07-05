@@ -305,19 +305,25 @@ def finetune(cfg: FinetuneConfig) -> None:
                     processor.save_pretrained(run_dir)
                     vla.module.save_pretrained(save_dir)
 
-                # Wait for processor and adapter weights to be saved by main process
-                dist.barrier()
+                    # # Wait for processor and adapter weights to be saved by main process
+                    # dist.barrier()
 
-                # Merge LoRA weights into model backbone for faster inference
-                #   =>> Note that merging is slow and can be done post-hoc to speed up training
-                if cfg.use_lora:
-                    base_vla = AutoModelForVision2Seq.from_pretrained(
-                        cfg.vla_path, torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, trust_remote_code=True
-                    )
-                    merged_vla = PeftModel.from_pretrained(base_vla, adapter_dir)
-                    merged_vla = merged_vla.merge_and_unload()
-                    if distributed_state.is_main_process:
+                    # Merge LoRA weights into model backbone for faster inference
+                    #   =>> Note that merging is slow and can be done post-hoc to speed up training
+
+                    if cfg.use_lora:
+                        base_vla = AutoModelForVision2Seq.from_pretrained(
+                            cfg.vla_path, torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, trust_remote_code=True,
+                            device_map='cpu'
+                        )
+                        merged_vla = PeftModel.from_pretrained(base_vla, adapter_dir, device_map='cpu')
+                        merged_vla = merged_vla.merge_and_unload()
                         merged_vla.save_pretrained(run_dir)
+
+                        # Clear memory after saving
+                        del base_vla
+                        del merged_vla
+                        torch.cuda.empty_cache()
 
                 # Block on Main Process Checkpointing
                 dist.barrier()
