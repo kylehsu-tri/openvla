@@ -49,36 +49,42 @@ class TrainConfig:
 
     # VLAConfig (`prismatic/conf/vla.py`); override with --vla.type `VLARegistry.<VLA>.vla_id`
     vla: VLAConfig = field(
-        default_factory=VLAConfig.get_choice_class(VLARegistry.DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS.vla_id)
+        # default_factory=VLAConfig.get_choice_class(VLARegistry.DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS.vla_id)
+        # default_factory=VLAConfig.get_choice_class(VLARegistry.DINOSIGLIP_224PX_MX_DROID_PICK_UP_CAN.vla_id)
+        default_factory=VLAConfig.get_choice_class(VLARegistry.SIGLIP_224PX_MX_DROID_PICK_UP_CAN.vla_id)
     )
 
     # Directory Paths
     data_root_dir: Path = Path(                                     # Path to Open-X dataset directory
-        "datasets/open-x-embodiment"
+        "/home/ubuntu/tensorflow_datasets"
     )
     run_root_dir: Path = Path("runs")                               # Path to directory to store logs & checkpoints
 
     # Resume Run Parameters
-    pretrained_checkpoint: Optional[Path] = None                    # Absolute Path to Checkpoint
+    # pretrained_checkpoint: Optional[Path] = Path("prism-dinosiglip-224px+mx-oxe-magic-soup-plus+n8+b32+x7")        # Absolute Path to Checkpoint
+    pretrained_checkpoint: Optional[Path] = Path(
+        "/home/ubuntu/code/fix-droid/openvla/openvla-dev/pretrained/siglip-224px+mx-oxe-magic-soup+n8+b32+x7/checkpoints/step-152500-epoch-27-loss=0.1637.pt")
     is_resume: bool = True                                          # Whether we are continuing a prior training run
                                                                     #   (only applicable given pretrained checkpoint)
-    resume_step: Optional[int] = None                               # Global Step to Resume (should match checkpoint)
-    resume_epoch: Optional[int] = None                              # Epoch to Resume (should match checkpoint)
+    # resume_step: Optional[int] = 295_000                               # Global Step to Resume (should match checkpoint)
+    # resume_epoch: Optional[int] = 40                              # Epoch to Resume (should match checkpoint)
+    resume_step: Optional[int] = 152_500                               # Global Step to Resume (should match checkpoint)
+    resume_epoch: Optional[int] = 27                              # Epoch to Resume (should match checkpoint)
 
     # Run Arguments
     run_id: Optional[str] = None                                    # Run ID for logging, Weights & Biases
     run_id_note: Optional[str] = None                               # Extra note for logging, Weights & Biases
-    save_interval: int = 2500                                       # Interval for saving checkpoints (in steps)
+    save_interval: int = 250                                       # Interval for saving checkpoints (in steps)
     image_aug: bool = False                                         # Whether to enable image augmentations
     seed: int = 7                                                   # Random seed (for reproducibility)
 
     # HF Hub Credentials (for any gated models)
-    hf_token: Union[str, Path] = Path(".hf_token")                  # Environment variable or Path to HF Token
+    hf_token: Union[str, Path] = "HF_TOKEN"                # Environment variable or Path to HF Token
 
     # Tracking Parameters
     trackers: Tuple[str, ...] = ("jsonl", "wandb")                  # Trackers to initialize (if W&B, add config!)
     wandb_project: str = "openvla"                                  # Name of W&B project to log to (use default!)
-    wandb_entity: str = "stanford-voltron"                          # Name of entity to log under
+    wandb_entity: str = "tri"                          # Name of entity to log under
 
     def __post_init__(self) -> None:
         """Lift optimization parameters from `self.vla` for ease of use =>> validate on `expected_world_size`"""

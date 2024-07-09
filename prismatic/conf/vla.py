@@ -138,6 +138,16 @@ class Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus(Exp_SigLIP_224px_Bridge):
 
 # === OpenVLA Fine-tuning Configurations ===
 
+# = [8 GPU] DinoSigLIP 224px + DROID pick up can
+@dataclass
+class Exp_DinoSigLIP_224px_DROID_PickUpCan(Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus):
+    vla_id: str = "prism-dinosiglip-224px+mx-droid_pick_up_can"
+    base_vlm: Union[str, Path] = "prism-dinosiglip-224px+7b"
+    data_mix: str = "droid_pick_up_can_target"
+    expected_world_size = 8
+    global_batch_size = 256
+    per_device_batch_size = 32
+
 
 # = [8 GPU] SigLIP 224px + T-DROID =
 @dataclass
@@ -198,6 +208,14 @@ class Exp_SigLIP_224px_Droid_Wipe(Exp_SigLIP_224px_Bridge):
     data_mix: str = "droid_wipe"
 
 
+@dataclass
+class Exp_SigLIP_224px_DROID_PickUpCan(Exp_SigLIP_224px_Bridge):
+    vla_id: str = "siglip-224px+mx-droid_pick_up_can"
+    base_vlm: Union[str, Path] = "siglip-224px+7b"
+
+    data_mix: str = "droid_pick_up_can_target"
+
+
 # === Define a VLA Registry Enum for Reference & Validation ===
 @unique
 class VLARegistry(Enum):
@@ -224,6 +242,8 @@ class VLARegistry(Enum):
 
     # === DROID Fine-tuning Configs ===
     SIGLIP_224PX_MX_DROID_WIPE = Exp_SigLIP_224px_Droid_Wipe
+    DINOSIGLIP_224PX_MX_DROID_PICK_UP_CAN = Exp_DinoSigLIP_224px_DROID_PickUpCan
+    SIGLIP_224PX_MX_DROID_PICK_UP_CAN = Exp_SigLIP_224px_DROID_PickUpCan
 
     @property
     def vla_id(self) -> str:

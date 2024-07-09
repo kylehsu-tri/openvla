@@ -27,6 +27,20 @@ Note that if your server is not accessible on the open web, you can use ngrok, o
     => `ssh -L 8000:localhost:8000 ssh USER@<SERVER_IP>`
 """
 
+from prismatic.conf import ModelConfig
+from prismatic.extern.hf.configuration_prismatic import OpenVLAConfig
+from prismatic.extern.hf.modeling_prismatic import OpenVLAForActionPrediction
+from prismatic.extern.hf.processing_prismatic import PrismaticImageProcessor, PrismaticProcessor
+
+from transformers import AutoConfig, AutoImageProcessor, AutoProcessor, AutoModelForVision2Seq
+
+AutoConfig.register("openvla", OpenVLAConfig)
+AutoImageProcessor.register(OpenVLAConfig, PrismaticImageProcessor)
+AutoProcessor.register(OpenVLAConfig, PrismaticProcessor)
+AutoModelForVision2Seq.register(OpenVLAConfig, OpenVLAForActionPrediction)
+
+
+
 import os.path
 
 # ruff: noqa: E402
@@ -46,6 +60,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from PIL import Image
+
 from transformers import AutoModelForVision2Seq, AutoProcessor
 
 # === Utilities ===

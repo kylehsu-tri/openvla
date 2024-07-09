@@ -42,7 +42,7 @@ class HFConvertConfig:
                                                                         #   => huggingface.co/openvla/openvla-{...}
 
     # HF Hub Credentials (required for Gated Models like LLaMa-2)
-    hf_token: Union[str, Path] = Path(".hf_token")                      # Environment variable or Path to HF Token
+    hf_token: Union[str, Path] = "HF_TOKEN"                    # Environment variable or Path to HF Token
 
     def __post_init__(self) -> None:
         self.hf_token = self.hf_token.read_text().strip() if isinstance(self.hf_token, Path) else self.hf_token
@@ -124,6 +124,7 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
         assert checkpoint_pt.exists(), f"Missing checkpoint for `{run_dir = }`"
         assert dataset_statistics_json.exists(), f"Missing `dataset_statistics.json` for `{run_dir = }`"
     else:
+        raise ValueError
         print(f"[*] Downloading Prismatic Checkpoint from HF Hub :: `TRI-ML/{cfg.openvla_model_path_or_id}`")
         config_json = hf_hub_download("openvla/openvla-dev", f"{cfg.openvla_model_path_or_id}/config.json")
         checkpoint_pt = hf_hub_download(
@@ -244,12 +245,12 @@ def convert_openvla_weights_to_hf(cfg: HFConvertConfig) -> None:
     PrismaticProcessor.register_for_auto_class("AutoProcessor")
     OpenVLAForActionPrediction.register_for_auto_class("AutoModelForVision2Seq")
 
-    # Push to Hub
-    print("[*] Pushing Model & Processor to HF Hub")
-    hf_config.push_to_hub(cfg.output_hf_model_hub_path)
-    hf_model.push_to_hub(cfg.output_hf_model_hub_path, max_shard_size="7GB")
-    hf_image_processor.push_to_hub(cfg.output_hf_model_hub_path)
-    hf_processor.push_to_hub(cfg.output_hf_model_hub_path)
+    # # Push to Hub
+    # print("[*] Pushing Model & Processor to HF Hub")
+    # hf_config.push_to_hub(cfg.output_hf_model_hub_path)
+    # hf_model.push_to_hub(cfg.output_hf_model_hub_path, max_shard_size="7GB")
+    # hf_image_processor.push_to_hub(cfg.output_hf_model_hub_path)
+    # hf_processor.push_to_hub(cfg.output_hf_model_hub_path)
 
 
 if __name__ == "__main__":
