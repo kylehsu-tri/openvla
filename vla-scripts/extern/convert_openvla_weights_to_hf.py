@@ -29,6 +29,8 @@ from prismatic.extern.hf.modeling_prismatic import OpenVLAForActionPrediction
 from prismatic.extern.hf.processing_prismatic import PrismaticImageProcessor, PrismaticProcessor
 
 
+# TODO: have script copy over the `dataset_statistics.json` file to the output directory
+
 @dataclass
 class HFConvertConfig:
     # fmt: off
