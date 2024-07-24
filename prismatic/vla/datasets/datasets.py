@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Tuple, Type
 
+import ipdb
 import numpy as np
 import torch
 from PIL import Image
@@ -33,6 +34,7 @@ class RLDSBatchTransform:
     base_tokenizer: PreTrainedTokenizerBase
     image_transform: ImageTransform
     prompt_builder_fn: Type[PromptBuilder]
+    use_proprio: bool
     predict_stop_token: bool = True
 
     def __call__(self, rlds_batch: Dict[str, Any]) -> Dict[str, Any]:
@@ -43,13 +45,33 @@ class RLDSBatchTransform:
 
         # Construct Chat-based Prompt =>> Input is default query + language instruction, output are the action tokens
         prompt_builder = self.prompt_builder_fn("openvla")
-        conversation = [
-            {"from": "human", "value": f"What action should the robot take to {lang}?"},
-            {"from": "gpt", "value": self.action_tokenizer(action)},
-        ]
+        if not self.use_proprio:
+            conversation = [
+                {"from": "human", "value": f"What action should the robot take to {lang}?"},
+                {"from": "gpt", "value": self.action_tokenizer(action)},
+            ]
+        else:
+            conversation = [
+                {
+                    "from":  "human",
+                    "value": (
+                        f"What action should the robot take to {lang}? "
+                        f"The end-effector Cartesian position is: ("
+                        f"{rlds_batch['observation']['proprio'][0][0]:.2f}, "
+                        f"{rlds_batch['observation']['proprio'][0][1]:.2f}, "
+                        f"{rlds_batch['observation']['proprio'][0][2]:.2f}). "
+                        f"The end-effector orientation is: ("
+                        f"{rlds_batch['observation']['proprio'][0][3]:.2f}, "
+                        f"{rlds_batch['observation']['proprio'][0][4]:.2f}, "
+                        f"{rlds_batch['observation']['proprio'][0][5]:.2f}). "
+                        f"The gripper position is: "
+                        f"{rlds_batch['observation']['proprio'][0][6]:.2f}."
+                    )
+                },
+                {"from": "gpt", "value": self.action_tokenizer(action)},
+            ]
         for turn in conversation:
             prompt_builder.add_turn(turn["from"], turn["value"])
-
         # Tokenize (w/ `base_tokenizer`)
         input_ids = self.base_tokenizer(prompt_builder.get_prompt(), add_special_tokens=True).input_ids
         labels = list(input_ids)
@@ -94,20 +116,20 @@ class RLDSDataset(IterableDataset):
             mixture_spec,
             load_camera_views=("primary",),
             load_depth=False,
-            load_proprio=False,
+            load_proprio=True,
             load_language=True,
             action_proprio_normalization_type=NormalizationType.BOUNDS_Q99,
         )
         rlds_config = dict(
             traj_transform_kwargs=dict(
-                window_size=1,                                      # If we wanted to feed / predict more than one step
-                future_action_window_size=0,                        # For action chunking
-                skip_unlabeled=True,                                # Skip trajectories without language labels
-                goal_relabeling_strategy="uniform",                 # Goals are currently unused
+                window_size=1,  # If we wanted to feed / predict more than one step
+                future_action_window_size=0,  # For action chunking
+                skip_unlabeled=True,  # Skip trajectories without language labels
+                goal_relabeling_strategy="uniform",  # Goals are currently unused
             ),
             frame_transform_kwargs=dict(
                 resize_size=resize_resolution,
-                num_parallel_calls=16,                          # For CPU-intensive ops (decoding, resizing, etc.)
+                num_parallel_calls=16,  # For CPU-intensive ops (decoding, resizing, etc.)
             ),
             dataset_kwargs_list=per_dataset_kwargs,
             shuffle_buffer_size=shuffle_buffer_size,
@@ -120,20 +142,24 @@ class RLDSDataset(IterableDataset):
 
         # If applicable, enable image augmentations
         if image_aug:
-            rlds_config["frame_transform_kwargs"].update({"image_augment_kwargs" : dict(
-                # random_resized_crop=dict(scale=[0.9, 0.9], ratio=[1.0, 1.0]),
-                random_brightness=[0.2],
-                random_contrast=[0.8, 1.2],
-                random_saturation=[0.8, 1.2],
-                random_hue=[0.05],
-                augment_order=[
-                    # "random_resized_crop",
-                    "random_brightness",
-                    "random_contrast",
-                    "random_saturation",
-                    "random_hue",
-                ],
-            )}),
+            rlds_config["frame_transform_kwargs"].update(
+                {
+                    "image_augment_kwargs": dict(
+                        # random_resized_crop=dict(scale=[0.9, 0.9], ratio=[1.0, 1.0]),
+                        random_brightness=[0.2],
+                        random_contrast=[0.8, 1.2],
+                        random_saturation=[0.8, 1.2],
+                        random_hue=[0.05],
+                        augment_order=[
+                            # "random_resized_crop",
+                            "random_brightness",
+                            "random_contrast",
+                            "random_saturation",
+                            "random_hue",
+                        ],
+                    )
+                }
+            ),
         # fmt: on
 
         # Initialize RLDS Dataset

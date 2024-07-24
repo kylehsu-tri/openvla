@@ -54,6 +54,8 @@ class TrainConfig:
         default_factory=VLAConfig.get_choice_class(VLARegistry.SIGLIP_224PX_MX_DROID_PICK_UP_CAN.vla_id)
     )
 
+    use_proprio: bool = True
+
     # Directory Paths
     data_root_dir: Path = Path(                                     # Path to Open-X dataset directory
         "/home/ubuntu/tensorflow_datasets"
@@ -201,6 +203,7 @@ def train(cfg: TrainConfig) -> None:
         tokenizer=vlm.llm_backbone.get_tokenizer(),
         prompt_builder_fn=vlm.llm_backbone.prompt_builder_fn,
         default_image_resolution=vlm.vision_backbone.default_image_resolution,
+        use_proprio=cfg.use_proprio,
         shuffle_buffer_size=cfg.vla.shuffle_buffer_size,
         image_aug=cfg.image_aug,
     )

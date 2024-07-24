@@ -32,6 +32,7 @@ class OpenVLA(PrismaticVLM):
         self.norm_stats = norm_stats
         self.action_tokenizer = action_tokenizer
 
+    # TODO: input proprio, check if normalization is done correctly
     @torch.inference_mode()
     def predict_action(
         self, image: Image, instruction: str, unnorm_key: Optional[str] = None, **kwargs: str

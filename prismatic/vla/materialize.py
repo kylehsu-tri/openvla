@@ -26,6 +26,7 @@ def get_vla_dataset_and_collator(
     prompt_builder_fn: Type[PromptBuilder],
     default_image_resolution: Tuple[int, int, int],
     padding_side: str = "right",
+    use_proprio: bool = False,
     predict_stop_token: bool = True,
     shuffle_buffer_size: int = 100_000,
     train: bool = True,
@@ -35,7 +36,8 @@ def get_vla_dataset_and_collator(
     """Initialize RLDS Dataset (wraps TFDS), ActionTokenizer, and initialize transform/collation functions."""
     action_tokenizer = ActionTokenizer(tokenizer)
     batch_transform = RLDSBatchTransform(
-        action_tokenizer, tokenizer, image_transform, prompt_builder_fn, predict_stop_token=predict_stop_token
+        action_tokenizer, tokenizer, image_transform, prompt_builder_fn,
+        use_proprio=use_proprio, predict_stop_token=predict_stop_token
     )
     collator = PaddedCollatorForActionPrediction(
         tokenizer.model_max_length, tokenizer.pad_token_id, padding_side=padding_side
